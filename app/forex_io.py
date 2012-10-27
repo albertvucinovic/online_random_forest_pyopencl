@@ -1,7 +1,73 @@
 import psycopg2
+import datetime
+
+def create_train_row(aligned_rows,minutes_before, minutes_after, zero_index):
+  row=[]
+  total=minutes_before+minutes_after
+  for i in range(minutes_before):
+    for j in range(2,7):#open, high, low, close, volume
+      row.append(aligned_rows[zero_index+i][1][j])
+  #time related basic features
+  dt=aligned_rows[zero_index+minutes_before][0]
+  row.append(dt.year)
+  row.append(dt.month)
+  row.append(dt.day)
+  row.append(dt.weekday())
+  row.append(dt.hour)
+  row.append(dt.minute)
+  #features for prediction/goal setting
+  for i in range(minutes_before, total):
+    for j in range(2,7):#open, high, low, close, volume
+      row.append(aligned_rows[zero_index+i][1][j])
+  print row
+  return row
 
 def read_train_data(currency, since, upto, minutes_before, minutes_after):
   data=read_train_data_minute_rows(currency, since, upto)
+  #put data into a hash table indexed by time
+  time_hashed_rows={}
+  for row in data:
+    dt=datetime.datetime.strptime(row[0]+' '+str(row[1]), "%Y.%m.%d %H:%M:%S")
+    time_hashed_rows[dt]=row
+  print "There are %d records in the hash"%len(time_hashed_rows)
+
+  #first take minutes_before+minutes_after consecutive (have data for almost all minutes) rows
+  since_t=datetime.datetime.strptime(since, "%Y.%m.%d")
+  upto_t=datetime.datetime.strptime(upto, "%Y.%m.%d")
+  td=datetime.timedelta(seconds=60)
+  current_time=since_t
+  aligned_rows=[]
+  while current_time<upto_t:
+    if current_time in time_hashed_rows:
+      aligned_rows.append([current_time, time_hashed_rows[current_time]])
+    else:
+      aligned_rows.append([current_time, None])
+    current_time+=td
+  #searching for appropriate candidates
+  training_rows=[]
+  pos=0
+  number_of_missing=0
+  total=minutes_before+minutes_after
+  while pos<len(aligned_rows):
+    if aligned_rows[pos][1]==None:
+      number_of_missing+=1
+    if pos>=total:
+      if aligned_rows[pos-total][1]==None:
+        number_of_missing-=1
+    if pos>=total-1:#we have at least total samples (indexes start with 0)
+      #if number_of_missing<total/10:#we have at least 90% of data
+      if number_of_missing==0: #We have all the data in the total interval
+        row=create_train_row(aligned_rows, minutes_before, minutes_after, pos-total+1)
+        training_rows.append(row)
+    pos+=1
+  return training_rows
+        
+      
+      
+    
+    
+
+
 
 def read_train_data_minute_rows(currency, since, upto):
   conn=psycopg2.connect("dbname=forex user=albert")
