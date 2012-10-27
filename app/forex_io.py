@@ -4,6 +4,7 @@ import datetime
 def create_train_row(aligned_rows,minutes_before, minutes_after, zero_index):
   row=[]
   total=minutes_before+minutes_after
+  #input features
   for i in range(minutes_before):
     for j in range(2,7):#open, high, low, close, volume
       row.append(aligned_rows[zero_index+i][1][j])
@@ -62,13 +63,6 @@ def read_train_data(currency, since, upto, minutes_before, minutes_after):
     pos+=1
   return training_rows
         
-      
-      
-    
-    
-
-
-
 def read_train_data_minute_rows(currency, since, upto):
   conn=psycopg2.connect("dbname=forex user=albert")
   cur=conn.cursor()
