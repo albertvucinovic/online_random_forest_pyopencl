@@ -5,15 +5,11 @@ import numpy
 def create_train_row(aligned_rows,minutes_before, minutes_after, zero_index):
   row=[]
   total=minutes_before+minutes_after
-  #input features
-  for i in range(minutes_before):
-    for j in range(2,7):#open, high, low, close, volume
-      row.append(aligned_rows[zero_index+i][1][j])
   #time related basic features
-  dt=aligned_rows[zero_index+minutes_before][0]
+  dt=aligned_rows[zero_index+minutes_before][0]#the last/current minute is the last of the minutes before
   map(lambda x:row.append(x), [dt.year, dt.month, dt.day, dt.weekday(), dt.hour, dt.minute])
-  #features for prediction/goal setting
-  for i in range(minutes_before, total):
+  #input features
+  for i in range(total):
     for j in range(2,7):#open, high, low, close, volume
       row.append(aligned_rows[zero_index+i][1][j])
   return row
@@ -21,11 +17,8 @@ def create_train_row(aligned_rows,minutes_before, minutes_after, zero_index):
 def row_dtypes(minutes_before, minutes_after):
   rowdtypes=[]
   total=minutes_before+minutes_after
-  for i in range(minutes_before):
-    si=str(i-minutes_before+1)
-    map(lambda x:rowdtypes.append((x,numpy.float)), ['open'+si, 'high'+si, 'low'+si, 'close'+si, 'volume'+si])
   map(lambda x:rowdtypes.append((x,numpy.int)),['year', 'month', 'day', 'weekday', 'hour', 'minute'])
-  for i in range(minutes_before, total):
+  for i in range(total):
     si=str(i-minutes_before+1)
     map(lambda x:rowdtypes.append((x,numpy.float)), ['open'+si, 'high'+si, 'low'+si, 'close'+si, 'volume'+si])
   return rowdtypes
