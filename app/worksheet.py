@@ -16,3 +16,13 @@ def read_train_data(currency, since, upto, minutes_before, minutes_after):
       }
     }
   }
+
+def send_action_with_name_helper(action, action_name, priority, redo):
+  send_message.send_twidler_message("(%d,(%s,'%s',%d))"%(priority, action, action_name, redo))
+  print "Sending action of priority %d, with name %s!"%(priority+1, action_name)
+
+
+currency_pairs=['eurusd_alpari', 'gbpjpy_alpari']
+
+priority=0
+
