@@ -19,16 +19,16 @@ def create_train_row(aligned_rows,minutes_before, minutes_after, zero_index):
   return row
 
 def row_dtypes(minutes_before, minutes_after):
-  row_dtypes=[]
+  rowdtypes=[]
   total=minutes_before+minutes_after
   for i in range(minutes_before):
     si=str(i-minutes_before+1)
-    map(lambda x:row_dtypes.append((x,numpy.float)), ['open'+si, 'high'+si, 'low'+si, 'close'+si, 'volume'+si])
-  map(lambda x:row_dtypes.append((x,numpy.int)),['year', 'month', 'day', 'weekday', 'hour', 'minute'])
+    map(lambda x:rowdtypes.append((x,numpy.float)), ['open'+si, 'high'+si, 'low'+si, 'close'+si, 'volume'+si])
+  map(lambda x:rowdtypes.append((x,numpy.int)),['year', 'month', 'day', 'weekday', 'hour', 'minute'])
   for i in range(minutes_before, total):
     si=str(i-minutes_before+1)
-    map(lambda x:row_dtypes.append((x,numpy.float)), ['open'+si, 'high'+si, 'low'+si, 'close'+si, 'volume'+si])
-  return row_dtypes
+    map(lambda x:rowdtypes.append((x,numpy.float)), ['open'+si, 'high'+si, 'low'+si, 'close'+si, 'volume'+si])
+  return rowdtypes
 
 
 def read_train_data(currency, since, upto, minutes_before, minutes_after):
