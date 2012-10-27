@@ -11,17 +11,25 @@ def create_train_row(aligned_rows,minutes_before, minutes_after, zero_index):
       row.append(aligned_rows[zero_index+i][1][j])
   #time related basic features
   dt=aligned_rows[zero_index+minutes_before][0]
-  row.append(dt.year)
-  row.append(dt.month)
-  row.append(dt.day)
-  row.append(dt.weekday())
-  row.append(dt.hour)
-  row.append(dt.minute)
+  map(lambda x:row.append(x), [dt.year, dt.month, dt.day, dt.weekday(), dt.hour, dt.minute])
   #features for prediction/goal setting
   for i in range(minutes_before, total):
     for j in range(2,7):#open, high, low, close, volume
       row.append(aligned_rows[zero_index+i][1][j])
   return row
+
+def row_dtypes(minutes_before, minutes_after):
+  row_dtypes=[]
+  total=minutes_before+minutes_after
+  for i in range(minutes_before):
+    si=str(i-minutes_before+1)
+    map(lambda x:row_dtypes.append((x,numpy.float)), ['open'+si, 'high'+si, 'low'+si, 'close'+si, 'volume'+si])
+  map(lambda x:row_dtypes.append((x,numpy.int)),['year', 'month', 'day', 'weekday', 'hour', 'minute'])
+  for i in range(minutes_before, total):
+    si=str(i-minutes_before+1)
+    map(lambda x:row_dtypes.append((x,numpy.float)), ['open'+si, 'high'+si, 'low'+si, 'close'+si, 'volume'+si])
+  return row_dtypes
+
 
 def read_train_data(currency, since, upto, minutes_before, minutes_after):
   data=read_train_data_minute_rows(currency, since, upto)
@@ -61,7 +69,9 @@ def read_train_data(currency, since, upto, minutes_before, minutes_after):
         row=create_train_row(aligned_rows, minutes_before, minutes_after, pos-total+1)
         training_rows.append(row)
     pos+=1
-  return numpy.array(training_rows)
+  row_dtypes=row_dtypes(minutes_before, minutes_after)
+  print row_dtypes
+  return numpy.array(training_rows, dtype=row_dtypes)
         
 def read_train_data_minute_rows(currency, since, upto):
   conn=psycopg2.connect("dbname=forex user=albert")
