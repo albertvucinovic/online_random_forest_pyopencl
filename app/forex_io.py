@@ -63,8 +63,12 @@ def read_train_data(currency, since, upto, minutes_before, minutes_after):
         training_rows.append(row)
     pos+=1
   rowdtypes=row_dtypes(minutes_before, minutes_after)
-  print rowdtypes
-  return numpy.array(training_rows, dtype=rowdtypes)
+  print numpy.array(rowdtypes)[range(20)]
+  #res=numpy.array(training_rows)
+  #res.dtype=rowdtypes
+  res=numpy.array(map(lambda x:tuple(x), training_rows), dtype=rowdtypes)
+  print res['volume0']
+  return res
         
 def read_train_data_minute_rows(currency, since, upto):
   conn=psycopg2.connect("dbname=forex user=albert")
