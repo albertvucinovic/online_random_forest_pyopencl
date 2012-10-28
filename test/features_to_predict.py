@@ -1,10 +1,10 @@
 import unittest
 import app.forex_io
-import app.features_to_predict
+from app.features_to_predict import LowHighVolumeFeaturesToPredict
 
 class TestFeaturesToPredict(unittest.TestCase):
   def setUp(self):
-    self.ftp=features_to_predict.LowHighVolumeFeaturesToPredict(360,180)
+    self.ftp=LowHighVolumeFeaturesToPredict(360,180)
 
   def test_feature_names(self):
     print self.ftp.feature_names('volume', 5)

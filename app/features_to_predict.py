@@ -11,7 +11,7 @@ class LowHighVolumeFeaturesToPredict:
   def fit(self, features):
     pass
 
-  def feature_names(generic_name, minutes_after):
+  def feature_names(self,generic_name, minutes_after):
     names=[]
     for i in range(1, minutes_after+1):
       si=str(i)
