@@ -20,6 +20,22 @@ class LowHighVolumeFeaturesToPredict:
 
 
   def transform(self, features):
-    pass
+    dtypes=[]
+    calculated_features=[]
+    for interval in intervals:
+      volumes_interval=numpy.sum(map(lambda x, list(x),features[feature_names('volume', interval)]),1)
+      calculated_features.append(volumes_interval)
+      dtypes.append(('volume_int_'+str(interval), numpy.float))
+
+      high_interval=numpy.max(map(lambda x, list(x), features[feature_names('high', interval)]),1)
+      calculated_features.append(high_interval)
+      dtypes.append(('high_int_'+str(interval), numpy.float))
+
+      low_interval=numpy.min(map(lambda x, list(x), features[feature_names('low', interval)]),1)
+      calculated_features.append(low_interval)
+      dtypes.append(('low_int_'+str(interval), numpy.float))
+
+    calculated_features=numpy.array(calculated_features).T
+    return numpy.array(map(lambda x: tuple(x), calculated_features), dtype=dtypes)
 
 
