@@ -1,15 +1,15 @@
 import unittest
-from ..app import forex_io
-from ..app import features_to_predict
+import app.forex_io
+import app.features_to_predict
 
 class TestFeaturesToPredict(unittest.TestCase):
   def setUp(self):
-    pass
+    self.ftp=features_to_predict.LowHighVolumeFeaturesToPredict(360,180)
 
-  def test_feature_names():
-    pass
+  def test_feature_names(self):
+    print self.ftp.feature_names('volume', 5)
   
-  def test_transform():
+  def test_transform(self):
     pass
 
 

@@ -1,5 +1,5 @@
 import unittest
-from ..app import forex_io
+import app.forex_io as forex_io
 
 class TestReadData(unittest.TestCase):
 
