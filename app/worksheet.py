@@ -72,7 +72,7 @@ def calculate_features_on_all_sets(execute, algo_class, algo_args, action_name_s
   global priority
   for currency in currency_pairs:
     features=[]
-    names="lambda f:"+str(features_names(minutes_before, minutes_after))
+    names="lambda f: f.dtype.names"#+str(features_names(minutes_before, minutes_after))
     features.append(('minute_data_360_180_2012_05_'+currency, names, names))
     calculate_action_name='calculate_'+action_name_short+'_minute_data_360_180_2012_05_'
     action=calculate_action_for_features(execute, algo_class, algo_args, features)
@@ -81,25 +81,26 @@ def calculate_features_on_all_sets(execute, algo_class, algo_args, action_name_s
     priority+=1
   for currency in currency_pairs:
     features=[]
-    names="lambda f:"+str(features_names(minutes_before, minutes_after))
+    names="lambda f: f.dtype.names"#+str(features_names(minutes_before, minutes_after))
     features.append(('minute_data_360_180_2012_05_'+currency, names, names))
     transform_action_name='transform_'+action_name_short+'_minute_data_360_180_2012_05_'
+    calculate_action_name=action_name
+    action=transform_features_action(calculate_action_name, features)
     action_name=transform_action_name+currency
-    action=transform_features_action(action_name, features)
     send_action_with_name_helper(action,action_name,priority,redo)
     priority+=1
 
 
 #Features that are going to be predicted
-#calculate_features_on_all_sets(
-#  'import app.features_to_predict',
-#  'app.features_to_predict.LowHighVolumeFeaturesToPredict',
-#  {
-#    'minutes_before':minutes_before,
-#    'minutes_after':minutes_after
-#  },
-#  'low_high_volume_features_to_predict_fib_times_154',
-#  0)
+calculate_features_on_all_sets(
+  'import app.features_to_predict',
+  'app.features_to_predict.LowHighVolumeFeaturesToPredict',
+  {
+    'minutes_before':minutes_before,
+    'minutes_after':minutes_after
+  },
+  'low_high_volume_features_to_predict_fib_times_154',
+  0)
 
 send_message.run()
 
