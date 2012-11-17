@@ -31,6 +31,8 @@ class TestOnlineRandomForest(unittest.TestCase):
     assert d.predict([1.])==5.
     d.update([1.], 10.)
     assert d.predict([1.])==7.5
+    d.update([1.], 10.)
+    assert d.predict([1.])==10.
 
 
 
