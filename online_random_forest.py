@@ -1,5 +1,5 @@
 import random
-import numpy as np
+import numpy 
 from sklearn.mixture import GMM
 
 
@@ -30,8 +30,11 @@ class DecisionTreeNode:
       self._randomly_select_features()
 
   def seen_samples(self):
-    first feature=self.randomly_selected_features[0]
-    return len(self.samples[first_feature])
+    return len(self.first_feature())
+
+  def first_feature(self):
+    #x[1] is the predicted value for the sample
+    return map(lambda x:x[1],self.samples[self.randomly_selected_features[0]])
 
 
   def _randomly_select_features(self):
@@ -75,18 +78,21 @@ class DecisionTreeNode:
 
   def predict(self, x):
     if self.is_leaf():
-      if self.seen_samples()>0:
-        #We are assuming there is at least one feature
-        for (feature, y) in self.samples[first_feature]:
-          pass
+      N=self.seen_samples()
+      if N>0:
+        how_many_needed_for_split=max(0,self.min_samples_to_split-N)
+        how_many_inherited=min(how_many_needed_for_split, self.predict_without_samples['num_samples'])
+        total=float(how_many_inherited+N)
+        return (
+          N/total*numpy.array(self.first_feature()).mean()+
+          how_many_inherited/total*self.predict_without_samples['mean'])
       else:
-        raise Exception('Need to learn before I can predict')
-        #TODO: Make the new nodes able to predict
+        return self.predict_without_samples['mean']
     else:
       if self.criterion(x):
-        self.right.predict(x)
+        return self.right.predict(x)
       else:
-        self.left.predict(x)
+        return self.left.predict(x)
       
 
 class DecisionTree(DecisionTreeNode):
@@ -113,7 +119,7 @@ class OnlineRandomForestRegressor:
 
   def update(self, x, y):
     for tree in self.trees:
-      k=np.random.poisson()
+      k=numpy.random.poisson()
       if k>0:
         for i in range(k):
           tree.update(x,y)
