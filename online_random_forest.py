@@ -8,7 +8,6 @@ class DecisionTreeNode:
       number_of_features,
       number_of_decision_functions=10,
       min_samples_to_split=100,
-      split_type='binomial gaussian mixture',
       predict_without_samples={
         'mean':0.0,
         'variance':1.0,
@@ -19,20 +18,21 @@ class DecisionTreeNode:
     self.number_of_features=number_of_features
     self.number_of_decision_functions=number_of_decision_functions
     self.min_samples_to_split=min_samples_to_split
-    self.split_type=split_type
     self.predict_without_samples=predict_without_samples
     #Dynamic
-    self.is_leaf=True
     self.left=None #False branch
     self.right=None #True branch
     self.randomly_selected_decision_functions=set([])
     self._randomly_select_decision_functions()
-    self.seen_samples=0
     self.criterion=None
 
   def _randomly_select_decision_functions(self):
-    if self.split_type=='binomial gaussian mixture':
       self._randomly_select_features()
+
+  def seen_samples(self):
+    first feature=self.randomly_selected_features[0]
+    return len(self.samples[first_feature])
+
 
   def _randomly_select_features(self):
     if self.number_of_features<self.number_of_decision_functions:
@@ -52,7 +52,7 @@ class DecisionTreeNode:
   def update(self, x, y):
     self.update_statistics(x,y)
     if self.is_leaf():
-      if self.seen_samples>self.min_samples_to_split:
+      if self.seen_samples()>self.min_samples_to_split:
         self.find_and_apply_best_split()
     if not self.is_leaf():
       if self.criterion(x):
@@ -61,8 +61,6 @@ class DecisionTreeNode:
         self.left.update(x,y)
 
   def update_statistics(self, x, y):
-    self.seen_samples+=1
-    if self.split_type=='binomial gaussian mixture':
       if self.is_leaf():#we stop collecting statistical info after the split
         for feature in self.randomly_selected_features:
           self.samples[feature].append((x[feature], y))
@@ -77,9 +75,7 @@ class DecisionTreeNode:
 
   def predict(self, x):
     if self.is_leaf():
-      first_feature=self.randomly_selected_features[0]
-      number_of_samples=len(self.samples[first_feature])
-      if number_of_samples>0:
+      if self.seen_samples()>0:
         #We are assuming there is at least one feature
         for (feature, y) in self.samples[first_feature]:
           pass
