@@ -1,21 +1,26 @@
 import random
 import numpy as np
+from sklearn.mixture import GMM
 
 
 class DecisionTreeNode:
   def __init__(self, 
       number_of_features,
-      number_of_decision_functions,
+      number_of_decision_functions=10,
       min_samples_to_split=100,
-      split_type='binomial gaussian mixture'
+      split_type='binomial gaussian mixture',
+      predict_without_samples={
+        'mean':0.0,
+        'variance':1.0,
+        'num_samples':0
+      }
     ):
     #Constants
     self.number_of_features=number_of_features
     self.number_of_decision_functions=number_of_decision_functions
     self.min_samples_to_split=min_samples_to_split
     self.split_type=split_type
-
-
+    self.predict_without_samples=predict_without_samples
     #Dynamic
     self.is_leaf=True
     self.left=None #False branch
@@ -29,12 +34,14 @@ class DecisionTreeNode:
     if self.split_type=='binomial gaussian mixture':
       self._randomly_select_features()
 
-  def _randomly_select_features():
+  def _randomly_select_features(self):
     if self.number_of_features<self.number_of_decision_functions:
       raise Exception('Cant have more randomly selected features than features')
     self.randomly_selected_features=set([])
     while len(self.randomly_selected_features)<self.number_of_decision_functions:
       self.randomly_selected_features.add(random.randint(0,self.number_of_decision_functions-1))
+    #I turn it into a list for convenience
+    self.randomly_selected_features=list(self.randomly_selected_features)
     self.samples={}
     for feature in self.randomly_selected_features:
       self.samples[feature]=[]#initialize storage for statistics
@@ -70,10 +77,13 @@ class DecisionTreeNode:
 
   def predict(self, x):
     if self.is_leaf():
-      number_of_samples=len(self.samples[0])
+      first_feature=self.randomly_selected_features[0]
+      number_of_samples=len(self.samples[first_feature])
       if number_of_samples>0:
-        for (feature, y) in self.samples[0]:#We are assuming there is at least one feature
-      else
+        #We are assuming there is at least one feature
+        for (feature, y) in self.samples[first_feature]:
+          pass
+      else:
         raise Exception('Need to learn before I can predict')
         #TODO: Make the new nodes able to predict
     else:
