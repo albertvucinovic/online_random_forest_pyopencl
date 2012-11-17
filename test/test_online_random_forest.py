@@ -22,10 +22,12 @@ class TestOnlineRandomForest(unittest.TestCase):
 
   def test_predict_without_samples(self):
     d=orf.DecisionTree(
-      1, number_of_decision_functions=1, predict_without_samples={
+      1, number_of_decision_functions=1, 
+      min_samples_to_split=2,
+      predict_without_samples={
         'mean':5.0,
         'variance':1.0,
-        'num_samples':1})
+        'num_samples':7})
     assert d.predict([1.])==5.
     d.update([1.], 10.)
     assert d.predict([1.])==7.5
