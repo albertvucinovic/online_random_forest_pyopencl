@@ -77,6 +77,13 @@ class DecisionTreeNode:
     pass
 
   def predict(self, x):
+    """
+      When the node is created, it gets only mean and sample count from the samples
+      that the node "inherited" from its parent. 
+      When the node has "seen" less than need to split samples, it takes "inhereted" samples to 
+      compensate (actually it takes the mean of inhereted samples multiplied by the number of
+      samples needed) when predicting.
+    """
     if self.is_leaf():
       N=self.seen_samples()
       if N>0:
