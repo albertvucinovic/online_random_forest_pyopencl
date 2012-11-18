@@ -7,7 +7,7 @@ class DecisionTreeNode:
   def __init__(self, 
       number_of_features,
       number_of_decision_functions=10,
-      min_samples_to_split=100,
+      min_samples_to_split=10,
       predict_without_samples={
         'mean':0.0,
         'variance':1.0,
@@ -57,9 +57,9 @@ class DecisionTreeNode:
       N=self._seen_samples()
       #Statistics for maximum 2*self.min_samples_to_split are collected
       #after that, we never split the node, and stop updating the statistics
-      if N<2*self.min_samples_to_split:
+      if N<=self.min_samples_to_split:
         self._update_statistics(x,y)
-      if N>self.min_samples_to_split and N<2*self.min_samples_to_split:
+      if N==self.min_samples_to_split:
         self._find_and_apply_best_split()
     if not self._is_leaf():
       if self.criterion(x):
@@ -72,39 +72,66 @@ class DecisionTreeNode:
       self.samples[feature].append((x[feature], y))
       
 
-  def _create_decision_functions(self):
-    self._collect_garbage()
+      
+  def _mean_square_error(x):
+    xnp=numpy.array(x)
+    xnp=xnp-xnp.mean()
+    return (x*x.T).sum()
+
+  def _mean_square_error(self,x):
+    return _mean_square_error(self._first_feature())
+
+  def _calculate_split_score(self, split):
+      #if the split is any good, this number should be greater than 0
+      return self._mean_square_error()-(
+        self._mean_square_error(split['left'])+
+        self._mean_square_error(split['right']))
+
+  def _find_best_split(self):
+    best_split=None
+    best_split_score=0
     for feature in self.randomly_selected_features:
-      X=map(lambda x:x[1], self.samples[feature])
-      gmm=GMM(n_components=2, covariance_type='spherical', init_params='wc', n_iter=20)
-      gmm.fit(x)
-      threshold=gmm.means_.mean()
-      self.randomly_selected_decision_functions[feature]=lambda x:x[feature]>threshold
+      for (feature_value, prediction) in self.samples[feature]:
+        split={
+          'left': numpy.array([x[1] for x in self.samples[feature] if x[0]<=feature_value]),
+          'right': numpy.array([x[1] for x in self.samples[feature] if x[0]>feature_value]),
+          'threshold':feature_value,
+          'feature':feature
+        }
+        split_score=self._calculate_split_score(split)
+        if(split_score>best_split_score):
+          best_split=split
+          best_split_score=split_score
 
-      self.left_samples[feature]=numpy.array([x for x in self.samples[feature] if x[0]<=threshold])
-      self.num_left_samples[feature]=len(self.left_samples[feature])
-      self.left_mean[feature]=self.left_samples[feature].mean()
+    return (best_split, best_split_score)
 
-      self.right_samples[feature]=numpy.array([x for x in self.samples[feature] if x[0]>threshlod])
-      self.num_right_samples[feature]=len(self.right_samples[feature])
-      self.right_mean[feature]=self.right_samples[feature].mean()
-
-  def _collect_garbage(self):
-    self.randomly_selected_decision_functions={}
-    self.left_samples={}
-    self.num_left_samples={}
-    self.left_means={}
-    self.right_samples={}
-    self.num_right_samples={}
-    self.right_means={}
-
-    
-    
 
   def _find_and_apply_best_split(self):
-    self._create_decision_functions()
-    pass
-
+    (best_split, best_split_score)=self._find_best_split()
+    if best_split_score>0:
+      self.criterion=lambda x:x[best_split['feature']]>best_split['threshold']
+      self.left=DecisionTreeNode(
+        number_of_features=self.number_of_features,
+        number_of_decision_functions=self.number_of_decision_functions,
+        min_samples_to_split=self.min_samples_to_split,
+        predict_without_samples={
+          'mean':best_split['left'].mean(),
+          'variance':best_split['left'].var(),
+          'num_samples':len(best_split['left'])
+        }
+      )
+      self.right=DecisionTreeNode(
+        number_of_features=self.number_of_features,
+        number_of_decision_functions=self.number_of_decision_functions,
+        min_samples_to_split=self.min_samples_to_split,
+        predict_without_samples={
+          'mean':best_split['right'].mean(),
+          'variance':best_split['right'].var(),
+          'num_samples':len(best_split['right'])
+        }
+      )
+      
+      
   def update_out_of_bag_error(self, x, y):
     #TODO:Estimate out of bag error
     pass
