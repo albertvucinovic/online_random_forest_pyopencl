@@ -65,7 +65,7 @@ class TestOnlineRandomForest(unittest.TestCase):
         row_as_np_array[key]=value
       prediction, variance=rf.predict(row_as_np_array)
       predictions.append(prediction)
-      prediction=int(round(prediction))
+      prediction=prediction[0]
       if prediction==y[i]:
         correct+=1
     print numpy.array(predictions)
@@ -74,7 +74,7 @@ class TestOnlineRandomForest(unittest.TestCase):
 
 
   def test_1_online_random_forest(self):
-    rf=orf.OnlineRandomForestRegressor(
+    rf=orf.OnlineRandomForestClassifier(
       number_of_features=181,
       number_of_samples_to_split=2,
       number_of_decision_functions_at_node=180,
@@ -82,7 +82,7 @@ class TestOnlineRandomForest(unittest.TestCase):
       )
     (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.tr')
     
-    for k in range(10):
+    for k in range(3):
       for i,row in enumerate(x):
           #if i<10:
           row_as_np_array=self.row_as_numpy_array(row)

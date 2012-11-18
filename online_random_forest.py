@@ -81,7 +81,7 @@ class DecisionTreeNode:
       #if the split is any good, this number should be greater than 0
       left_error=mean_square_error(split['left'])
       right_error=mean_square_error(split['right'])
-      myerror=self.mean_square_error()
+      myerror=self._my_mean_square_error()
       score =myerror-max(left_error,right_error)
       #print myerror, left_error, right_error, score
       return score
@@ -196,9 +196,9 @@ class ClassificationTree(DecisionTreeNode):
     self.predict_without_samples=predict_without_samples
 
   def _calculate_split_score(self, split):
-    left_error=self._gini(split['left'])
-    right_error=self._gini(split['right'])
-    myerror=self._gini(self._first_feature())
+    left_error=gini(split['left'])
+    right_error=gini(split['right'])
+    myerror=gini(self._first_feature())
     total=float(len(self._first_feature()))
     score=myerror-1/total*(len(split['left'])*left_error+len(split['right'])*right_error)
     return score
@@ -209,9 +209,9 @@ class ClassificationTree(DecisionTreeNode):
     if best_split_score>0:
       total_splits+=1
       print "                      ", total_splits, len(best_split['left']), len(best_split['right'])
-      print self._first_feature(), self._my_mean_square_error()
-      print best_split['left'], self._mean_square_error(best_split['left'])
-      print best_split['right'], self._mean_square_error(best_split['right'])
+      print self._first_feature(), gini(self._first_feature())
+      print best_split['left'], gini(best_split['left'])
+      print best_split['right'], gini(best_split['right'])
       self.criterion=lambda x:x[best_split['feature']]>best_split['threshold']
       self.left=ClassificationTree(
         number_of_features=self.number_of_features,
@@ -308,21 +308,22 @@ class OnlineRandomForestRegressor:
     return (predictions.mean(), predictions.var())
       
 
-class OnlineRandomForestClassifier(OnlineRandomForestRegressos):
-  def __init__(self
+class OnlineRandomForestClassifier(OnlineRandomForestRegressor):
+  def __init__(self,
     number_of_features,
     number_of_trees=100,
-    number_of_decision_functions_at_node=number_of_features,
+    number_of_decision_functions_at_node=10,
     number_of_samples_to_split=2,
   ):
     self.number_of_features=number_of_features
     self.number_of_trees=number_of_trees
-    self.number_of_decision_functions_at_node=number_of_decision_functions
+    self.number_of_decision_functions_at_node=number_of_decision_functions_at_node
     self.trees=map(lambda x:ClassificationTree(
       number_of_features,
       number_of_decision_functions_at_node,
-      min_samples_to_split=number_of_samples_to_split,)
+      min_samples_to_split=number_of_samples_to_split),
       range(number_of_trees))
+    self.pool=Pool(2)
 
   def predict(self, x):
     predictions=[tree.predict(x) for tree in self.trees]
@@ -350,7 +351,7 @@ def count_dict(a):
   for x in a:
     if x in d:
       d[x]+=1
-    else
+    else:
       d[x]=1
   return d
       
