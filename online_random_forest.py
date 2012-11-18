@@ -173,13 +173,15 @@ class OnlineRandomForestRegressor:
       number_of_features, 
       number_of_trees=100, 
       number_of_decision_functions_at_node=10, 
+      number_of_samples_to_split=10,
       tolerance=1e-5):
     self.number_of_trees=number_of_trees
     self.number_of_decision_functions_at_node=number_of_decision_functions_at_node
     self.tolerance=tolerance
     self.trees=map(lambda x:DecisionTree(
       number_of_features,
-      number_of_decision_functions_at_node
+      number_of_decision_functions_at_node,
+      min_samples_to_split=number_of_samples_to_split,
       ), range(number_of_trees))
 
   def update(self, x, y):
@@ -198,7 +200,8 @@ class OnlineRandomForestRegressor:
     predictions=[]
     for tree in self.trees:
       predictions.append(tree.predict(x))
-    return sum(predictions)/len(predictions)
+    predictions=numpy.array(predictions)
+    return (predictions.mean(), predictions.var())
       
 
 class OnlineRandomForestClassifier:
