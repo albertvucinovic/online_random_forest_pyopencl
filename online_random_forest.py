@@ -71,8 +71,6 @@ class DecisionTreeNode:
     for feature in self.randomly_selected_features:
       self.samples[feature].append((x[feature], y))
       
-
-      
   def _mean_square_error(x):
     xnp=numpy.array(x)
     xnp=xnp-xnp.mean()
@@ -105,7 +103,6 @@ class DecisionTreeNode:
 
     return (best_split, best_split_score)
 
-
   def _find_and_apply_best_split(self):
     (best_split, best_split_score)=self._find_best_split()
     if best_split_score>0:
@@ -132,7 +129,6 @@ class DecisionTreeNode:
       )
       #collect garbage
       self.samples={}
-      
       
   def update_out_of_bag_error(self, x, y):
     #TODO:Estimate out of bag error
