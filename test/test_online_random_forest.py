@@ -1,4 +1,5 @@
 import online_random_forest.online_random_forest as orf
+import online_random_forest.libsvm_format as libsvm
 import unittest
 from sklearn.mixture import GMM
 
@@ -33,6 +34,11 @@ class TestOnlineRandomForest(unittest.TestCase):
     assert d.predict([1.])==7.5
     d.update([1.], 10.)
     assert d.predict([1.])==10.
+  
+  def test_libsvm_reading(self):
+    (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale')
+    assert x[0][2]==1.
+    assert y[0]==3
 
 
 
