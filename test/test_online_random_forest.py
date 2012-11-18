@@ -64,7 +64,7 @@ class TestOnlineRandomForest(unittest.TestCase):
       )
     (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.tr')
     
-    for k in range(1):
+    for k in range(3):
       for i,row in enumerate(x):
           #if i<10:
           row_as_np_array=self.row_as_numpy_array(row)
