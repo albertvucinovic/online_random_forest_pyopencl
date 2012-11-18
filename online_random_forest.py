@@ -2,14 +2,15 @@ import random
 import numpy 
 from sklearn.mixture import GMM
 
+total_splits=0
 
 class DecisionTreeNode:
   def __init__(self, 
       number_of_features,
       number_of_decision_functions=10,
-      min_samples_to_split=10,
+      min_samples_to_split=20,
       predict_without_samples={
-        'mean':0.0,
+        'mean':2.0,
         'variance':1.0,
         'num_samples':0
       }
@@ -25,6 +26,7 @@ class DecisionTreeNode:
     self.randomly_selected_decision_functions={}
     self._randomly_select_decision_functions()
     self.criterion=None
+
 
   def _randomly_select_decision_functions(self):
       self._randomly_select_features()
@@ -57,9 +59,9 @@ class DecisionTreeNode:
       N=self._seen_samples()
       #Statistics for maximum 2*self.min_samples_to_split are collected
       #after that, we never split the node, and stop updating the statistics
-      if N<=self.min_samples_to_split:
-        self._update_statistics(x,y)
-      if N==self.min_samples_to_split:
+      #if N<=self.min_samples_to_split:
+      self._update_statistics(x,y)
+      if N>self.min_samples_to_split:
         self._find_and_apply_best_split()
     if not self._is_leaf():
       if self.criterion(x):
@@ -71,19 +73,21 @@ class DecisionTreeNode:
     for feature in self.randomly_selected_features:
       self.samples[feature].append((x[feature], y))
       
-  def _mean_square_error(x):
+  def _mean_square_error(self, x):
     xnp=numpy.array(x)
     xnp=xnp-xnp.mean()
-    return (x*x.T).sum()
+    return (xnp*xnp.T).sum()
 
-  def _mean_square_error(self,x):
-    return _mean_square_error(self._first_feature())
+  def _my_mean_square_error(self):
+    return self._mean_square_error(self._first_feature())
 
   def _calculate_split_score(self, split):
       #if the split is any good, this number should be greater than 0
-      return self._mean_square_error()-(
-        self._mean_square_error(split['left'])+
-        self._mean_square_error(split['right']))
+      left_error=self._mean_square_error(split['left'])
+      right_error=self._mean_square_error(split['right'])
+      myerror=self._my_mean_square_error()
+      #print myerror, left_error, right_error
+      return myerror-(left_error+right_error)
 
   def _find_best_split(self):
     best_split=None
@@ -104,8 +108,14 @@ class DecisionTreeNode:
     return (best_split, best_split_score)
 
   def _find_and_apply_best_split(self):
+    global total_splits
     (best_split, best_split_score)=self._find_best_split()
     if best_split_score>0:
+      total_splits+=1
+      print "                      ", total_splits, len(best_split['left']), len(best_split['right'])
+      print self._first_feature(), self._my_mean_square_error()
+      print best_split['left'], self._mean_square_error(best_split['left'])
+      print best_split['right'], self._mean_square_error(best_split['right'])
       self.criterion=lambda x:x[best_split['feature']]>best_split['threshold']
       self.left=DecisionTreeNode(
         number_of_features=self.number_of_features,
@@ -148,6 +158,7 @@ class DecisionTreeNode:
         how_many_needed_for_split=max(0,self.min_samples_to_split-N)
         how_many_inherited=min(how_many_needed_for_split, self.predict_without_samples['num_samples'])
         total=float(how_many_inherited+N)
+        #print self._first_feature()
         return (
           N/total*numpy.array(self._first_feature()).mean()+
           how_many_inherited/total*self.predict_without_samples['mean'])

@@ -2,6 +2,8 @@ import online_random_forest.online_random_forest as orf
 import online_random_forest.libsvm_format as libsvm
 import unittest
 from sklearn.mixture import GMM
+import numpy
+import curses
 
 class TestOnlineRandomForest(unittest.TestCase):
   def setUp(self):
@@ -36,20 +38,88 @@ class TestOnlineRandomForest(unittest.TestCase):
     assert d.predict([1.])==10.
   
   def test_libsvm_reading(self):
-    (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale')
-    assert x[0][2]==1.
-    assert y[0]==3
+    (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.tr')
+    assert x[0][5]==1.
+    print x[0]
+    assert y[0]==2.
+    print x[3]
+    print y[3]
+
+    print "y"
+    print y[0], y[1], y[2], y[3], y[4], y[5], y[6], y[7]
+
+  def test_1_online_random_forest(self):
+    rf=orf.OnlineRandomForestRegressor(
+      number_of_features=181,
+      number_of_samples_to_split=6,
+      number_of_decision_functions_at_node=10,
+      number_of_trees=500
+      )
+    (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.tr')
+    for k in range(1):
+      for i,row in enumerate(x):
+        row_as_np_array=numpy.zeros(181)
+        for key,value in row.iteritems():
+          row_as_np_array[key]=value
+        print "Update", k, i
+        rf.update(row_as_np_array, y[i])
+
+    print "Predicting..."
+    total=len(x)
+    correct=0
+    predictions=[]
+    for i, row in enumerate(x):
+      row_as_np_array=numpy.zeros(181)
+      for key, value in row.iteritems():
+        row_as_np_array[key]=value
+      prediction, variance=rf.predict(row_as_np_array)
+      predictions.append(prediction)
+      prediction=int(round(prediction))
+      if prediction==y[i]:
+        correct+=1
+    print numpy.array(predictions)
+    print correct/float(total)
 
   def test_online_random_forest(self):
+    x=[
+      [1,2,3],
+      [2,3,5],
+      [1,3,8],
+      [2,8,3]
+      ]
+    y=[1,2,1,2]
     rf=orf.OnlineRandomForestRegressor(
-      number_of_features=180,
+      number_of_features=3,
+      number_of_samples_to_split=2,
+      number_of_decision_functions_at_node=3
       )
-    (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale')
-    for i,row in enumerate(x):
-      row_as_np_array=numpy.zeros(180)
-      for key,value in row.iteritems():
-        row_as_np_array[key]=value
-      rf.update(row_as_np_array, y[i])
+    for k in range(2):
+      for i,row in enumerate(x):
+        row_as_np_array=numpy.array(row)
+        print row_as_np_array
+        rf.update(row_as_np_array, y[i])
+
+    x=[
+      [1,2,4],
+      [2,5,3],
+      [1,7,8]
+      ]
+    y=[1,2,1]
+    total=len(x)
+    correct=0
+    predictions=[]
+    for i, row in enumerate(x):
+      row_as_np_array=numpy.array(row)
+      prediction, variance=rf.predict(row_as_np_array)
+      predictions.append((prediction, variance))
+      prediction=int(round(prediction))
+      if prediction==y[i]:
+        correct+=1
+    print predictions
+    print correct/float(total)
+
+
+
 
 
 
