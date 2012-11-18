@@ -55,27 +55,7 @@ class TestOnlineRandomForest(unittest.TestCase):
       npa[key]=value
     return npa
   
-  def test_1_online_random_forest(self):
-    rf=orf.OnlineRandomForestRegressor(
-      number_of_features=181,
-      number_of_samples_to_split=2,
-      number_of_decision_functions_at_node=180,
-      number_of_trees=20
-      )
-    (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.tr')
-    
-    for k in range(3):
-      for i,row in enumerate(x):
-          #if i<10:
-          row_as_np_array=self.row_as_numpy_array(row)
-          row_as_np_array=numpy.zeros(181)
-          for key,value in row.iteritems():
-            row_as_np_array[key]=value
-          print "                                                                         Update", k, i
-          rf.update(row_as_np_array, y[i])
-
-    print "Predicting..."
-    (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.t')
+  def predict_libsvm_set(sefl, rf, x, y):
     total=len(x)
     correct=0
     predictions=[]
@@ -91,6 +71,33 @@ class TestOnlineRandomForest(unittest.TestCase):
     print numpy.array(predictions)
     print correct/float(total)
 
+
+
+  def test_1_online_random_forest(self):
+    rf=orf.OnlineRandomForestRegressor(
+      number_of_features=181,
+      number_of_samples_to_split=2,
+      number_of_decision_functions_at_node=180,
+      number_of_trees=1
+      )
+    (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.tr')
+    
+    for k in range(10):
+      for i,row in enumerate(x):
+          #if i<10:
+          row_as_np_array=self.row_as_numpy_array(row)
+          row_as_np_array=numpy.zeros(181)
+          for key,value in row.iteritems():
+            row_as_np_array[key]=value
+          print "                                                                         Update", k, i
+          rf.update(row_as_np_array, y[i])
+
+    print "Predicting training ..."
+    self.predict_libsvm_set(rf, x, y)
+    print "Predicting test ..."
+    (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.t')
+    self.predict_libsvm_set(rf, x, y)
+    
   def test_online_random_forest(self):
     x=[
       [1,2,3],

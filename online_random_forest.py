@@ -74,19 +74,14 @@ class DecisionTreeNode:
     for feature in self.randomly_selected_features:
       self.samples[feature].append((x[feature], y))
       
-  def _mean_square_error(self, x):
-    xnp=numpy.array(x)
-    xnp=xnp-xnp.mean()
-    return (xnp*xnp.T).mean()
-
   def _my_mean_square_error(self):
-    return self._mean_square_error(self._first_feature())
+    return mean_square_error(self._first_feature())
 
   def _calculate_split_score(self, split):
       #if the split is any good, this number should be greater than 0
-      left_error=self._mean_square_error(split['left'])
-      right_error=self._mean_square_error(split['right'])
-      myerror=self._my_mean_square_error()
+      left_error=mean_square_error(split['left'])
+      right_error=mean_square_error(split['right'])
+      myerror=self.mean_square_error()
       score =myerror-max(left_error,right_error)
       #print myerror, left_error, right_error, score
       return score
@@ -118,8 +113,8 @@ class DecisionTreeNode:
       total_splits+=1
       print "                      ", total_splits, len(best_split['left']), len(best_split['right'])
       print self._first_feature(), self._my_mean_square_error()
-      print best_split['left'], self._mean_square_error(best_split['left'])
-      print best_split['right'], self._mean_square_error(best_split['right'])
+      print best_split['left'], mean_square_error(best_split['left'])
+      print best_split['right'], mean_square_error(best_split['right'])
       self.criterion=lambda x:x[best_split['feature']]>best_split['threshold']
       self.left=DecisionTreeNode(
         number_of_features=self.number_of_features,
@@ -177,6 +172,85 @@ class DecisionTreeNode:
 
 class DecisionTree(DecisionTreeNode):
   pass
+
+class ClassificationTree(DecisionTreeNode):
+  def __init__(self, 
+      number_of_features,
+      number_of_classes,
+      number_of_decision_functions=10,
+      min_samples_to_split=20,
+      predict_without_samples={
+        'count_dict':{},
+      }
+    ):
+    #Constants
+    self.number_of_features=number_of_features
+    self.number_of_decision_functions=number_of_decision_functions
+    self.min_samples_to_split=min_samples_to_split
+    self.predict_without_samples=predict_without_samples
+    #Dynamic
+    self.left=None #False branch
+    self.right=None #True branch
+    self.randomly_selected_decision_functions={}
+    self._randomly_select_decision_functions()
+    self.criterion=None
+    self.predict_without_samples=predict_without_samples
+
+  def _calculate_split_score(self, split):
+    left_error=self._gini(split['left'])
+    right_error=self._gini(split['right'])
+    myerror=self._gini(self._first_feature())
+    total=float(len(self._first_feature()))
+    score=myerror-1/total*(len(split['left'])*left_error+len(split['right'])*right_error)
+    return score
+
+  def _find_and_apply_best_split(self):
+    global total_splits
+    (best_split, best_split_score)=self._find_best_split()
+    if best_split_score>0:
+      total_splits+=1
+      print "                      ", total_splits, len(best_split['left']), len(best_split['right'])
+      print self._first_feature(), self._my_mean_square_error()
+      print best_split['left'], self._mean_square_error(best_split['left'])
+      print best_split['right'], self._mean_square_error(best_split['right'])
+      self.criterion=lambda x:x[best_split['feature']]>best_split['threshold']
+      self.left=ClassificationTree(
+        number_of_features=self.number_of_features,
+        number_of_classes=self.number_of_classes,
+        number_of_decision_functions=self.number_of_decision_functions,
+        min_samples_to_split=self.min_samples_to_split,
+        predict_without_samples={
+          'count_dict':count_dict(best_split['left']),
+        }
+      )
+      self.right=ClassificationTree(
+        number_of_features=self.number_of_features,
+        number_of_classes=self.number_of_classes,
+        number_of_decision_functions=self.number_of_decision_functions,
+        min_samples_to_split=self.min_samples_to_split,
+        predict_without_samples={
+          'count_dict':count_dict(best_split['right']),
+        }
+      )
+      #collect garbage
+      self.samples={}
+
+  def predict(self, x):
+    if self._is_leaf():
+      d1=self.predict_without_samples['count_dict']
+      d2=count_dict(self._first_feature())
+      for key, value in d1.iteritems():
+        if key in d2:
+          d2[key]+=value
+        else:
+          d2[key]=value
+      return argmax(d2)
+    else:
+      if self.criterion(x):
+        return self.right.predict(x)
+      else:
+        return self.left.predict(x)
+
 
 class OnlineRandomForestRegressor:
   """
@@ -237,9 +311,75 @@ class OnlineRandomForestRegressor:
     return (predictions.mean(), predictions.var())
       
 
-class OnlineRandomForestClassifier:
-  pass
+class OnlineRandomForestClassifier(OnlineRandomForestRegressos):
+  #We are assuming that classes are labeled from 0 to number_of_classes-1
+  def __init__(self
+    number_of_features,
+    number_of_classes,
+    number_of_trees=100,
+    number_of_decision_functions_at_node=number_of_features,
+    number_of_samples_to_split=2,
+  ):
+    self.number_of_features=number_of_features
+    self.number_of_classes=number_of_classes
+    self.number_of_trees=number_of_trees
+    self.number_of_decision_functions_at_node=number_of_decision_functions
+    self.trees=map(lambda x:ClassificationTree(
+      number_of_features,
+      number_of_classes=self.number_of_classes,
+      number_of_decision_functions_at_node,
+      min_samples_to_split=number_of_samples_to_split,)
+      range(number_of_trees))
 
+  def predict(self, x):
+    predictions=[tree.predict(x) for tree in self.trees]
+    return predict_max(predictions)
+
+#Takes a dictionary of values
+def argmax(d):
+    max_class=0
+    max_count=0
+    total_count=0
+    for key, value in d.iteritems():
+      total_count+=value
+      if value>max_count:
+        max_count=value
+        max_class=key
+    #returning the chosen class and the confidence
+    return (max_class, max_count/float(total_count))
+
+#returns the element that shows up maximum number of times
+def predict_max(a):
+   return argmax(count_dict(a))
+
+def count_dict(a):
+  d={}
+  for x in a:
+    if x in d:
+      d[x]+=1
+    else
+      d[x]=1
+  return d
+      
+def mean_square_error(x):
+    xnp=numpy.array(x)
+    xnp=xnp-xnp.mean()
+    return (xnp*xnp.T).mean()
+     
+def gini(x):
+  d={}
+  for y in x:
+    d[y]=0
+  for y in x:
+    d[y]+=1
+  total=float(len(x))
+  to_sqare=[]
+  for key, value in d.iteritems():
+    to_sqare.append(value/total)
+  to_square=numpy.array(to_sqare)
+  return 1-(to_square*to_square.T).sum()
+
+    
 
 def parallel_update(s, tree,x,y):
   s.update_tree(tree,x,y)
