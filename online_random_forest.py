@@ -188,7 +188,8 @@ class OnlineRandomForestRegressor:
 
   def update(self, x, y):
     for tree in self.trees:
-      k=numpy.random.poisson()
+      #k=numpy.random.poisson()#this is with resampling
+      k=numpy.random.randint(2)#don't want to resample
       if k>0:
         for i in range(k):
           tree.update(x,y)
