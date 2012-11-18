@@ -22,7 +22,7 @@ class DecisionTreeNode:
     #Dynamic
     self.left=None #False branch
     self.right=None #True branch
-    self.randomly_selected_decision_functions=set([])
+    self.randomly_selected_decision_functions={}
     self._randomly_select_decision_functions()
     self.criterion=None
 
@@ -50,12 +50,16 @@ class DecisionTreeNode:
       self.samples[feature]=[]#initialize storage for statistics
 
   def is_leaf(self):
-    return self.left==None and self.right==None
+    return self.criterion==None
 
   def update(self, x, y):
-    self.update_statistics(x,y)
     if self.is_leaf():
-      if self.seen_samples()>self.min_samples_to_split:
+      N=self.seen_samples()
+      #Statistics for maximum 2*self.min_samples_to_split are collected
+      #after that, we never split the node, and stop updating the statistics
+      if N<2*self.min_samples_to_split:
+        self.update_statistics(x,y)
+      if N>self.min_samples_to_split and N<2*self.min_samples_to_split:
         self.find_and_apply_best_split()
     if not self.is_leaf():
       if self.criterion(x):
@@ -64,12 +68,41 @@ class DecisionTreeNode:
         self.left.update(x,y)
 
   def update_statistics(self, x, y):
-      if self.is_leaf():#we stop collecting statistical info after the split
-        for feature in self.randomly_selected_features:
-          self.samples[feature].append((x[feature], y))
+    for feature in self.randomly_selected_features:
+      self.samples[feature].append((x[feature], y))
       
 
+  def _create_decision_functions(self):
+    self._collect_garbage()
+    for feature in self.randomly_selected_features:
+      X=map(lambda x:x[1], self.samples[feature])
+      gmm=GMM(n_components=2, covariance_type='spherical', init_params='wc', n_iter=20)
+      gmm.fit(x)
+      threshold=gmm.means_.mean()
+      self.randomly_selected_decision_functions[feature]=lambda x:x[feature]>threshold
+
+      self.left_samples[feature]=numpy.array([x for x in self.samples[feature] if x[0]<=threshold])
+      self.num_left_samples[feature]=len(self.left_samples[feature])
+      self.left_mean[feature]=self.left_samples[feature].mean()
+
+      self.right_samples[feature]=numpy.array([x for x in self.samples[feature] if x[0]>threshlod])
+      self.num_right_samples[feature]=len(self.right_samples[feature])
+      self.right_mean[feature]=self.right_samples[feature].mean()
+
+  def _collect_garbage(self):
+    self.randomly_selected_decision_functions={}
+    self.left_samples={}
+    self.num_left_samples={}
+    self.left_means={}
+    self.right_samples={}
+    self.num_right_samples={}
+    self.right_means={}
+
+    
+    
+
   def find_and_apply_best_split(self):
+    self._create_decision_functions()
     pass
 
   def update_out_of_bag_error(self, x, y):
@@ -80,7 +113,7 @@ class DecisionTreeNode:
     """
       When the node is created, it gets only mean and sample count from the samples
       that the node "inherited" from its parent. 
-      When the node has "seen" less than need to split samples, it takes "inhereted" samples to 
+      When the node has "seen" less than min_to_split samples, it takes "inhereted" samples to 
       compensate (actually it takes the mean of inhereted samples multiplied by the number of
       samples needed) when predicting.
     """
