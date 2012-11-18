@@ -40,6 +40,19 @@ class TestOnlineRandomForest(unittest.TestCase):
     assert x[0][2]==1.
     assert y[0]==3
 
+  def test_online_random_forest(self):
+    rf=orf.OnlineRandomForestRegressor(
+      number_of_features=180,
+      )
+    (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale')
+    for i,row in enumerate(x):
+      row_as_np_array=numpy.zeros(180)
+      for key,value in row.iteritems():
+        row_as_np_array[key]=value
+      rf.update(row_as_np_array, y[i])
+
+
+
 
 
 if __name__=='__main__':
