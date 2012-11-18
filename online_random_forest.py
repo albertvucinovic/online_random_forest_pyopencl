@@ -1,6 +1,7 @@
 import random
 import numpy 
-from sklearn.mixture import GMM
+from joblib import Parallel, delayed
+from multiprocessing.pool import ThreadPool as Pool
 
 total_splits=0
 
@@ -198,8 +199,9 @@ class OnlineRandomForestRegressor:
       min_samples_to_split=number_of_samples_to_split,
       ), range(number_of_trees))
 
-  def update(self, x, y):
-    for tree in self.trees:
+    self.pool=Pool(2)
+
+  def update_tree(self, tree, x, y):
       #k=numpy.random.poisson()#this is with resampling
       k=numpy.random.randint(2)#don't want to resample
       if k>0:
@@ -208,7 +210,24 @@ class OnlineRandomForestRegressor:
       else:
         #If k==0, then the sample is not learned by the tree
         tree.update_out_of_bag_error(x,y)
-   
+
+  def list_trees(self):
+    for tree in self.trees:
+      yield tree
+    
+  def update(self, x, y):
+
+    self.pool.map(lambda x:parallel_update(*x), [(self, tree, x, y) for tree in self.trees])
+
+    #doesn't work
+    #jobs=Parallel(n_jobs=1, pre_dispatch='2', verbose=1)(
+    #  delayed(parallel_update)(self,tree,x,y) for tree in self.list_trees())
+
+    #Single threaded
+    #for tree in self.trees:
+    #  self.update_tree(tree, x, y)
+      
+         
 
   def predict(self, x):
     predictions=[]
@@ -221,3 +240,7 @@ class OnlineRandomForestRegressor:
 class OnlineRandomForestClassifier:
   pass
 
+
+def parallel_update(s, tree,x,y):
+  s.update_tree(tree,x,y)
+ 

@@ -48,21 +48,31 @@ class TestOnlineRandomForest(unittest.TestCase):
     print "y"
     print y[0], y[1], y[2], y[3], y[4], y[5], y[6], y[7]
 
+
+  def row_as_numpy_array(self, row):
+    npa=numpy.zeros(181)
+    for key, value in row.iteritems():
+      npa[key]=value
+    return npa
+  
   def test_1_online_random_forest(self):
     rf=orf.OnlineRandomForestRegressor(
       number_of_features=181,
       number_of_samples_to_split=2,
       number_of_decision_functions_at_node=180,
-      number_of_trees=10
+      number_of_trees=20
       )
     (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.tr')
-    for i,row in enumerate(x):
-      row_as_np_array=numpy.zeros(181)
-      for key,value in row.iteritems():
-        row_as_np_array[key]=value
-      for k in range(3):
-        print "                                                                         Update", k, i
-        rf.update(row_as_np_array, y[i])
+    
+    for k in range(1):
+      for i,row in enumerate(x):
+          #if i<10:
+          row_as_np_array=self.row_as_numpy_array(row)
+          row_as_np_array=numpy.zeros(181)
+          for key,value in row.iteritems():
+            row_as_np_array[key]=value
+          print "                                                                         Update", k, i
+          rf.update(row_as_np_array, y[i])
 
     print "Predicting..."
     (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.t')
