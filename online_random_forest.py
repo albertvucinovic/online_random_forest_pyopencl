@@ -93,8 +93,10 @@ class DecisionTreeNode:
   def _find_best_split(self):
     best_split=None
     best_split_score=0
+    #TODO: try random samples, not the best one
     for feature in self.randomly_selected_features:
       for (feature_value, prediction) in self.samples[feature]:
+        #feature_value=self.samples[feature][numpy.random.randint(self._seen_samples())][0]
         split={
           'left': numpy.array([x[1] for x in self.samples[feature] if x[0]<=feature_value]),
           'right': numpy.array([x[1] for x in self.samples[feature] if x[0]>feature_value]),

@@ -56,15 +56,16 @@ class TestOnlineRandomForest(unittest.TestCase):
       number_of_trees=10
       )
     (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.tr')
-    for k in range(3):
-      for i,row in enumerate(x):
-        row_as_np_array=numpy.zeros(181)
-        for key,value in row.iteritems():
-          row_as_np_array[key]=value
+    for i,row in enumerate(x):
+      row_as_np_array=numpy.zeros(181)
+      for key,value in row.iteritems():
+        row_as_np_array[key]=value
+      for k in range(3):
         print "                                                                         Update", k, i
         rf.update(row_as_np_array, y[i])
 
     print "Predicting..."
+    (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.t')
     total=len(x)
     correct=0
     predictions=[]
