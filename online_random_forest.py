@@ -58,16 +58,16 @@ class DecisionTreeNode:
       #Statistics for maximum 2*self.min_samples_to_split are collected
       #after that, we never split the node, and stop updating the statistics
       if N<2*self.min_samples_to_split:
-        self.update_statistics(x,y)
+        self._update_statistics(x,y)
       if N>self.min_samples_to_split and N<2*self.min_samples_to_split:
-        self.find_and_apply_best_split()
+        self._find_and_apply_best_split()
     if not self._is_leaf():
       if self.criterion(x):
         self.right.update(x,y)
       else:
         self.left.update(x,y)
 
-  def update_statistics(self, x, y):
+  def _update_statistics(self, x, y):
     for feature in self.randomly_selected_features:
       self.samples[feature].append((x[feature], y))
       
@@ -101,7 +101,7 @@ class DecisionTreeNode:
     
     
 
-  def find_and_apply_best_split(self):
+  def _find_and_apply_best_split(self):
     self._create_decision_functions()
     pass
 
