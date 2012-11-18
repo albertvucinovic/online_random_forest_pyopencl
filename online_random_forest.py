@@ -29,10 +29,10 @@ class DecisionTreeNode:
   def _randomly_select_decision_functions(self):
       self._randomly_select_features()
 
-  def seen_samples(self):
-    return len(self.first_feature())
+  def _seen_samples(self):
+    return len(self._first_feature())
 
-  def first_feature(self):
+  def _first_feature(self):
     #x[1] is the predicted value for the sample
     return map(lambda x:x[1],self.samples[self.randomly_selected_features[0]])
 
@@ -49,19 +49,19 @@ class DecisionTreeNode:
     for feature in self.randomly_selected_features:
       self.samples[feature]=[]#initialize storage for statistics
 
-  def is_leaf(self):
+  def _is_leaf(self):
     return self.criterion==None
 
   def update(self, x, y):
-    if self.is_leaf():
-      N=self.seen_samples()
+    if self._is_leaf():
+      N=self._seen_samples()
       #Statistics for maximum 2*self.min_samples_to_split are collected
       #after that, we never split the node, and stop updating the statistics
       if N<2*self.min_samples_to_split:
         self.update_statistics(x,y)
       if N>self.min_samples_to_split and N<2*self.min_samples_to_split:
         self.find_and_apply_best_split()
-    if not self.is_leaf():
+    if not self._is_leaf():
       if self.criterion(x):
         self.right.update(x,y)
       else:
@@ -117,14 +117,14 @@ class DecisionTreeNode:
       compensate (actually it takes the mean of inhereted samples multiplied by the number of
       samples needed) when predicting.
     """
-    if self.is_leaf():
-      N=self.seen_samples()
+    if self._is_leaf():
+      N=self._seen_samples()
       if N>0:
         how_many_needed_for_split=max(0,self.min_samples_to_split-N)
         how_many_inherited=min(how_many_needed_for_split, self.predict_without_samples['num_samples'])
         total=float(how_many_inherited+N)
         return (
-          N/total*numpy.array(self.first_feature()).mean()+
+          N/total*numpy.array(self._first_feature()).mean()+
           how_many_inherited/total*self.predict_without_samples['mean'])
       else:
         return self.predict_without_samples['mean']
