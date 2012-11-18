@@ -130,6 +130,8 @@ class DecisionTreeNode:
           'num_samples':len(best_split['right'])
         }
       )
+      #collect garbage
+      self.samples={}
       
       
   def update_out_of_bag_error(self, x, y):
