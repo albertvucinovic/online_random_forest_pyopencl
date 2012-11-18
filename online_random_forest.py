@@ -76,7 +76,7 @@ class DecisionTreeNode:
   def _mean_square_error(self, x):
     xnp=numpy.array(x)
     xnp=xnp-xnp.mean()
-    return (xnp*xnp.T).sum()
+    return (xnp*xnp.T).mean()
 
   def _my_mean_square_error(self):
     return self._mean_square_error(self._first_feature())
@@ -86,8 +86,9 @@ class DecisionTreeNode:
       left_error=self._mean_square_error(split['left'])
       right_error=self._mean_square_error(split['right'])
       myerror=self._my_mean_square_error()
-      #print myerror, left_error, right_error
-      return myerror-(left_error+right_error)
+      score =myerror-max(left_error,right_error)
+      #print myerror, left_error, right_error, score
+      return score
 
   def _find_best_split(self):
     best_split=None
