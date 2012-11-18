@@ -176,7 +176,6 @@ class DecisionTree(DecisionTreeNode):
 class ClassificationTree(DecisionTreeNode):
   def __init__(self, 
       number_of_features,
-      number_of_classes,
       number_of_decision_functions=10,
       min_samples_to_split=20,
       predict_without_samples={
@@ -216,7 +215,6 @@ class ClassificationTree(DecisionTreeNode):
       self.criterion=lambda x:x[best_split['feature']]>best_split['threshold']
       self.left=ClassificationTree(
         number_of_features=self.number_of_features,
-        number_of_classes=self.number_of_classes,
         number_of_decision_functions=self.number_of_decision_functions,
         min_samples_to_split=self.min_samples_to_split,
         predict_without_samples={
@@ -225,7 +223,6 @@ class ClassificationTree(DecisionTreeNode):
       )
       self.right=ClassificationTree(
         number_of_features=self.number_of_features,
-        number_of_classes=self.number_of_classes,
         number_of_decision_functions=self.number_of_decision_functions,
         min_samples_to_split=self.min_samples_to_split,
         predict_without_samples={
@@ -312,21 +309,17 @@ class OnlineRandomForestRegressor:
       
 
 class OnlineRandomForestClassifier(OnlineRandomForestRegressos):
-  #We are assuming that classes are labeled from 0 to number_of_classes-1
   def __init__(self
     number_of_features,
-    number_of_classes,
     number_of_trees=100,
     number_of_decision_functions_at_node=number_of_features,
     number_of_samples_to_split=2,
   ):
     self.number_of_features=number_of_features
-    self.number_of_classes=number_of_classes
     self.number_of_trees=number_of_trees
     self.number_of_decision_functions_at_node=number_of_decision_functions
     self.trees=map(lambda x:ClassificationTree(
       number_of_features,
-      number_of_classes=self.number_of_classes,
       number_of_decision_functions_at_node,
       min_samples_to_split=number_of_samples_to_split,)
       range(number_of_trees))
