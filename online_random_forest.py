@@ -62,7 +62,7 @@ class DecisionTreeNode:
       #after that, we never split the node, and stop updating the statistics
       #if N<=self.min_samples_to_split:
       self._update_statistics(x,y)
-      if N>self.min_samples_to_split:
+      if N==self.min_samples_to_split or N==2*self.min_samples_to_split:#TODO: put back the and N<=2*self.min_samples_to_split
         self._find_and_apply_best_split()
     if not self._is_leaf():
       if self.criterion(x):
