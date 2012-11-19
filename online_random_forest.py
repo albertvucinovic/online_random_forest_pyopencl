@@ -82,7 +82,9 @@ class DecisionTreeNode:
       left_error=mean_square_error(split['left'])
       right_error=mean_square_error(split['right'])
       myerror=self._my_mean_square_error()
-      score =myerror-max(left_error,right_error)
+      #score =myerror-max(left_error,right_error)
+      total=float(len(self._first_feature()))
+      score=myerror-1/total*(len(split['left'])*left_error+len(split['right'])*right_error)
       #print myerror, left_error, right_error, score
       return score
 
@@ -358,7 +360,8 @@ def count_dict(a):
 def mean_square_error(x):
     xnp=numpy.array(x)
     xnp=xnp-xnp.mean()
-    return (xnp*xnp.T).mean()
+    #return (xnp*xnp.T).mean()
+    return abs(xnp).mean()
      
 def gini(x):
   d={}
