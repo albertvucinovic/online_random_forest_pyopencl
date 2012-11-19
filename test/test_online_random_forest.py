@@ -88,12 +88,12 @@ class TestOnlineRandomForest(unittest.TestCase):
     print correct/float(total)
 
 
-  def _test_online_random_forest_classifier(self):
+  def test_online_random_forest_classifier(self):
     rf=orf.OnlineRandomForestClassifier(
       number_of_features=181,
       number_of_samples_to_split=10,
       number_of_decision_functions_at_node=180,
-      number_of_trees=10
+      number_of_trees=40
       )
     (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.tr')
     
