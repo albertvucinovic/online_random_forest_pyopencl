@@ -45,7 +45,7 @@ class DecisionTreeNode:
       raise Exception('Cant have more randomly selected features than features')
     self.randomly_selected_features=set([])
     while len(self.randomly_selected_features)<self.number_of_decision_functions:
-      self.randomly_selected_features.add(random.randint(0,self.number_of_decision_functions-1))
+      self.randomly_selected_features.add(random.randint(0,self.number_of_features-1))
     #I turn it into a list for convenience
     self.randomly_selected_features=list(self.randomly_selected_features)
     self.samples={}
