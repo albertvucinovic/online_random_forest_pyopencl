@@ -21,6 +21,7 @@ class DecisionTreeNode:
     self.number_of_decision_functions=number_of_decision_functions
     self.min_samples_to_split=min_samples_to_split
     self.predict_without_samples=predict_without_samples
+    self.max_samples_to_save=100
     #Dynamic
     self.left=None #False branch
     self.right=None #True branch
@@ -60,8 +61,8 @@ class DecisionTreeNode:
       N=self._seen_samples()
       #Statistics for maximum 2*self.min_samples_to_split are collected
       #after that, we never split the node, and stop updating the statistics
-      #if N<=self.min_samples_to_split:
-      self._update_statistics(x,y)
+      if N<=self.max_samples_to_save:
+        self._update_statistics(x,y)
       if N==self.min_samples_to_split or N==2*self.min_samples_to_split:
         self._find_and_apply_best_split()
     if not self._is_leaf():
