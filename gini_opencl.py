@@ -99,8 +99,11 @@ void gini(
   }
    
   float split_score=my_gini-1/%(num_samples)f*(left_total*left_gini+right_total*right_gini);
-
-  gini_res[main_index]=split_score;
+  
+  if(!isnan(split_score))
+    gini_res[main_index]=split_score;
+  else
+    gini_res[main_index]=0.;
 
 }"""
 
