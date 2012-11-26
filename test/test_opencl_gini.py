@@ -6,8 +6,8 @@ from time import time
 
 from online_random_forest.online_random_forest import gini
 
-height=8
-width=16
+height=16
+width=1024
 A=numpy.random.rand(height, width).astype(numpy.float32)
 classes=numpy.array(map(lambda x:numpy.random.randint(5), range(height))).astype(numpy.int32)
 
@@ -18,11 +18,23 @@ class TestOpenCLGini(unittest.TestCase):
 
 
 
-  def test_normal_gini(self):
-    print "Normal Gini Matrix:", self.gini_matrix(A, classes)
-
   def test_opencl_gini(self):
-    print "OpenCL Gini Matrix:", self.opencl_gini_matrix()
+    t=time()
+    gini_matrix=self.gini_matrix(A, classes)
+    time_spent=time()-t
+    print "Normal Gini Matrix:", gini_matrix
+    self.normal_time=time_spent
+    print "Took seconds:", time_spent
+    t=time()
+    opencl_gini_matrix=self.opencl_gini_matrix()
+    time_spent=time()-t
+    print "OpenCL Gini Matrix:", opencl_gini_matrix
+    self.gini_time=time_spent
+    print "Took seconds:", time_spent
+    print "Speedup is:", self.normal_time/time_spent
+    assert numpy.allclose(gini_matrix, opencl_gini_matrix, atol=1e-6)
+
+
 
   def opencl_gini_matrix(self):
     h_a_gini=self.opencl_calc.opencl_gini_matrix(A, classes)
