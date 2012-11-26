@@ -24,15 +24,16 @@ void gini(
   __global float *A, 
   __constant %(class_type)s *sample_classes, 
   __global float *gini_res,
-  __global int *debug_params)
+  __global int *debug_params,
+  __global float * return_A)
 {
   __local float A_local[LOCAL_MATRIX_SIZE];
   __local %(class_type)s sample_classes_local[%(num_samples)d];
 
   unsigned int thread_feature = get_global_id(0);
   unsigned int thread_sample = get_global_id(1);
-  debug_params[0]=2>1;//get_global_size(0);
-  debug_params[1]=1>2;//get_global_size(1);
+  debug_params[0]=A[0]*100000;//get_global_size(0);
+  debug_params[1]=A[%(num_samples)d*%(num_features)d-1];//get_global_size(1);
   debug_params[2]=%(num_features)d;
   debug_params[3]=%(num_samples)d;
 
@@ -83,16 +84,20 @@ void gini(
     left_total=left_total+(1-(float)class);
     classes_counts[2*hashed_index+class]++;
   }
-  if(thread_feature==0){
+  if(thread_feature==0 && thread_sample==0){
     for(int i=0;i<%(num_samples)d;i++){
       debug_params[i+4+%(num_samples)d]=classes_counts[2*i];
     }
   }
-  if(thread_feature==0){
+  if(thread_feature==0 && thread_sample==0){
     for(int i=0;i<%(num_samples)d;i++){
       debug_params[i+4+2*%(num_samples)d]=classes_counts[2*i+1];
     }
+    for(int i=0;i<%(num_features)d;i++){
+      debug_params[i+4+3*%(num_samples)d]=A[i]*100000;
+    }
   }
+ 
 
 
   //now we have the counts for gini, now we compute it
@@ -122,6 +127,7 @@ void gini(
   float split_score=my_gini-1/%(num_samples)f*(left_total*left_gini+right_total*right_gini);
 
   gini_res[main_index]=split_score;
+  return_A[main_index]=A[main_index];
   barrier(CLK_GLOBAL_MEM_FENCE);
 
 }"""
