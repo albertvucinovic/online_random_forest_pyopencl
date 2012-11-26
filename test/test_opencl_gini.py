@@ -64,15 +64,7 @@ class TestOpenCLGini(unittest.TestCase):
     pull_time=time()-t1
     print "Push time, gpu time, pull time:", push_time, gpu_time, pull_time
     return h_a_gini
-    #print "OpenCL Gini Matrix:", h_a_gini
-    #for x in range(h_a_gini.shape[0]):
-    #  for y in range(h_a_gini.shape[1]):
-    #    print x,y,h_a_gini[x,y]
-    #print h_debug
-    #print self.classes
-    #print "h_return_a",h_return_a
-
-
+    
   def gini_matrix(self):
     for feature in range(self.width):
       for sample in range(self.height):
