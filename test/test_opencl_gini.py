@@ -45,30 +45,22 @@ class TestOpenCLGini(unittest.TestCase):
     print "OpenCL Gini Matrix:", self.opencl_gini_matrix()
 
   def opencl_gini_matrix(self):
-    debug_length=4+self.height*3+self.width
     #getting data to the device
     mf=cl.mem_flags
     t1=time()
     d_a_buf=cl.Buffer(self.ctx, mf.READ_ONLY|mf.COPY_HOST_PTR, hostbuf=self.h_a)
     d_classes_buf=cl.Buffer(self.ctx, mf.READ_ONLY|mf.COPY_HOST_PTR, hostbuf=self.classes)
-    print self.h_a_gini.nbytes
     push_time=time()-t1
     #calculating one gini matrix
-    d_debug_buf=cl.Buffer(self.ctx, mf.WRITE_ONLY, size=debug_length*4)
     d_gini_buf=cl.Buffer(self.ctx, mf.WRITE_ONLY, size=self.h_a_gini.nbytes)
-    d_return_A_buf=cl.Buffer(self.ctx, mf.WRITE_ONLY, size=self.h_a.nbytes)
-    event=self.kernel(self.queue, self.h_a.shape[::-1], (1,self.height), d_a_buf, d_classes_buf, d_gini_buf, d_debug_buf, d_return_A_buf)
+    event=self.kernel(self.queue, self.h_a.shape[::-1], (1,self.height), d_a_buf, d_classes_buf, d_gini_buf)
     event.wait()
     gpu_time=time()-t1
 
     #getting data from device
     h_a_gini=numpy.empty((self.height, self.width)).astype(numpy.float32)
-    h_debug=numpy.empty(debug_length).astype(numpy.int32)
-    h_return_a=numpy.empty((self.height, self.width)).astype(numpy.float32)
     t1=time()
     cl.enqueue_copy(self.queue, h_a_gini, d_gini_buf)
-    cl.enqueue_copy(self.queue, h_debug, d_debug_buf)
-    cl.enqueue_copy(self.queue, h_return_a, d_return_A_buf)
     pull_time=time()-t1
     print "Push time, gpu time, pull time:", push_time, gpu_time, pull_time
     return h_a_gini
