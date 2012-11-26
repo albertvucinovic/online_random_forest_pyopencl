@@ -1,3 +1,4 @@
+import numpy
 kernel_arguments={
   'num_samples': 16,
   'num_features': 2000,
@@ -105,4 +106,42 @@ void gini(
 
 #print kernel % kernel_arguments
 
+import pyopencl as cl
+
+class OpenCLGiniCalculator():
+  def __init__(self, num_samples, num_features, class_type='int', prime=4294967291):
+    self.ctx=cl.create_some_context()
+    for dev in self.ctx.devices:
+      assert dev.local_mem_size>0
+    self.queue=cl.CommandQueue(self.ctx, properties=cl.command_queue_properties.PROFILING_ENABLE)
+    if "NVIDIA" in self.queue.device.vendor:
+      options="-cl-mad-enable -cl-fast-relaxed-math"
+    else:
+      options=""
+    kernel_params=kernel_arguments
+    kernel_params['class_type']=class_type
+    kernel_params['num_features']=num_features
+    kernel_params['num_samples']=num_samples
+    kernel_params['prime']= prime
+    self.prg=cl.Program(self.ctx, kernel%kernel_params).build(options=options) 
+    self.kernel=self.prg.gini
+    self.h_a_gini=numpy.zeros((num_samples, num_features)).astype(numpy.float32)
+
+
+  def opencl_gini_matrix(self, matrix, classes):
+    #matrix should be numpy.float32 matrix with dimensions num_samples x num_features
+    #no checks are done here
+    #matrix=numpy.array(matrix).astype(numpy.float32)
+
+    #getting data to the device
+    mf=cl.mem_flags
+    d_a_buf=cl.Buffer(self.ctx, mf.READ_ONLY|mf.COPY_HOST_PTR, hostbuf=matrix)
+    d_classes_buf=cl.Buffer(self.ctx, mf.READ_ONLY|mf.COPY_HOST_PTR, hostbuf=classes)
+    #calculating one gini matrix
+    d_gini_buf=cl.Buffer(self.ctx, mf.WRITE_ONLY, size=self.h_a_gini.nbytes)
+    event=self.kernel(self.queue, matrix.shape[::-1], (1,matrix.shape[0]), d_a_buf, d_classes_buf, d_gini_buf)
+    event.wait()
+    #getting data from device
+    cl.enqueue_copy(self.queue, self.h_a_gini, d_gini_buf)
+    return self.h_a_gini
 
