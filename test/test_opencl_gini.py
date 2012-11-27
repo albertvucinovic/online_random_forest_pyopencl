@@ -1,6 +1,8 @@
 import unittest
 from online_random_forest.gini_opencl import OpenCLGiniCalculator
 import pyopencl as cl
+import pyopencl.array as cl_array
+from pyopencl.scan import InclusiveScanKernel as ScanKernel
 import numpy
 from time import time
 
@@ -34,6 +36,31 @@ class TestOpenCLGini(unittest.TestCase):
     print "Speedup is:", self.normal_time/time_spent
     assert numpy.allclose(gini_matrix, opencl_gini_matrix, atol=1e-6)
 
+  def test_opencl_maximum(self):
+    ctx=self.opencl_calc.ctx
+    queue=cl.CommandQueue(ctx)
+    t=time()
+    n = 2000
+    host_data=numpy.random.randn(n).astype(numpy.float32)
+    for i in range(1000):
+      dev_data=cl_array.to_device(queue, host_data)
+      knl=ScanKernel(ctx, numpy.float32, "max(a,b)")
+      knl(dev_data)
+      res=dev_data.get()
+    print  "OpenCL Maximum took:", time()-t
+    print "Original", host_data
+    print "Maximumized:", res
+    #gini_matrix=self.opencl_calc.opencl_gini_best(A, classes)
+    #print "Maximum Gini Matrix:", gini_matrix
+
+  def test_numpy_maximum_performance(self):
+    n=2000
+    a=numpy.random.randn(n).astype(numpy.float32)
+    t=time()
+    for i in range(1000):
+      k=i+a.argmax()
+    print "Numpy Maximum Took:", time()-t
+      
 
 
   def opencl_gini_matrix(self):

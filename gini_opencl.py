@@ -102,35 +102,18 @@ kernel_middle="""
    
   float split_score=my_gini-1/%(num_samples)f*(left_total*left_gini+right_total*right_gini);
   
+"""
+kernel_gini_matrix_end="""
   if(!isnan(split_score))
     gini_res[main_index]=split_score;
   else
     gini_res[main_index]=0.;
-"""
-kernel_gini_matrix_end="""
+
 }"""
 
-kernel_gini_best_header="""
-
-#define hash(k) as_int((k)) %% %(prime)d %% %(num_samples)d
-
-#define SAMPLES %(num_samples)d
-#define FEATURES 1
-#define LOCAL_MATRIX_SIZE SAMPLES*FEATURES
-
-__kernel 
-void gini_best(
-  __global float *A, 
-  __constant %(class_type)s *sample_classes, 
-  __global int *feature_sample_pair)
-{
-"""
-
-kernel_gini_best_end="""
-"""
-#print kernel % kernel_arguments
-
 import pyopencl as cl
+from pyopencl.scan import InclusiveScanKernel as ScanKernel
+import pyopencl.array as cl_array
 
 class OpenCLGiniCalculator():
   def __init__(self, num_samples, num_features, class_type='int', prime=4294967291):
@@ -153,12 +136,8 @@ class OpenCLGiniCalculator():
     self.prg_gini_matrix=cl.Program(self.ctx, kernel_gini%kernel_params).build(options=options) 
     self.kernel_gini_matrix=self.prg_gini_matrix.gini
 
-    #gini best kernel
-    #kernel_gini_best=kernel_gini_best_header+kernel_middle+kernel_gini_best_end
-    #self.prg_gini_best=cl.Program(self.ctx, kernel_gini_best%kernel_params).build(options=options) 
-    #self.kernel_gini_best=self.prg_gini_best.gini_best
-
-
+  def ctx(self):
+    return self.ctx
 
   def opencl_gini_matrix(self, matrix, classes):
     #matrix should be numpy.float32 matrix with dimensions num_samples x num_features
@@ -178,18 +157,7 @@ class OpenCLGiniCalculator():
     cl.enqueue_copy(self.queue, h_a_gini, d_gini_buf)
     return h_a_gini
 
-  def opencl_gini_best(self, matrix, classes):
-    #getting data to the device
-    mf=cl.mem_flags
-    d_a_buf=cl.Buffer(self.ctx, mf.READ_ONLY|mf.COPY_HOST_PTR, hostbuf=matrix)
-    d_classes_buf=cl.Buffer(self.ctx, mf.READ_ONLY|mf.COPY_HOST_PTR, hostbuf=classes)
-    #calculating one gini matrix
-    d_gini_buf=cl.Buffer(self.ctx, mf.WRITE_ONLY, size=8)#two integers are returned
-    event=self.kernel(self.queue, matrix.shape[::-1], (1,matrix.shape[0]), d_a_buf, d_classes_buf, d_gini_buf)
-    event.wait()
-    #getting data from device
-    cl.enqueue_copy(self.queue, self.h_a_gini, d_gini_buf)
-    return self.h_a_gini
+
 
     
 
