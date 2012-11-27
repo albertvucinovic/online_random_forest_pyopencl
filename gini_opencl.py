@@ -116,25 +116,22 @@ from pyopencl.scan import InclusiveScanKernel as ScanKernel
 import pyopencl.array as cl_array
 
 class OpenCLGiniCalculator():
-  def __init__(self, num_samples, num_features, class_type='int', prime=4294967291):
+  def __init__(self, class_type='int', prime=4294967291):
     self.ctx=cl.create_some_context()
     for dev in self.ctx.devices:
       assert dev.local_mem_size>0
     self.queue=cl.CommandQueue(self.ctx, properties=cl.command_queue_properties.PROFILING_ENABLE)
     if "NVIDIA" in self.queue.device.vendor:
-      options="-cl-mad-enable -cl-fast-relaxed-math"
+      self.options="-cl-mad-enable -cl-fast-relaxed-math"
     else:
-      options=""
-    kernel_params=kernel_arguments
-    kernel_params['class_type']=class_type
-    kernel_params['num_features']=num_features
-    kernel_params['num_samples']=num_samples
-    kernel_params['prime']= prime
+      self.options=""
+    self.kernel_params=kernel_arguments
+    self.kernel_params['class_type']=class_type
+    self.kernel_params['prime']= prime
     
     #gini matrix kernel
-    kernel_gini=kernel_gini_matrix_header+kernel_middle+kernel_gini_matrix_end
-    self.prg_gini_matrix=cl.Program(self.ctx, kernel_gini%kernel_params).build(options=options) 
-    self.kernel_gini_matrix=self.prg_gini_matrix.gini
+    self.kernel_gini=kernel_gini_matrix_header+kernel_middle+kernel_gini_matrix_end
+    self.kernel_dict={}
 
   def ctx(self):
     return self.ctx
@@ -144,6 +141,16 @@ class OpenCLGiniCalculator():
     #no checks are done here
     #matrix=numpy.array(matrix).astype(numpy.float32)
 
+    if matrix.shape in self.kernel_dict:
+      self.kernel_gini_matrix=self.kernel_dict[matrix.shape]
+    else:
+      kernel_params=self.kernel_params
+      kernel_params['num_features']=matrix.shape[1]
+      kernel_params['num_samples']=matrix.shape[0]
+      self.prg_gini_matrix=cl.Program(self.ctx, self.kernel_gini%kernel_params).build(options=self.options) 
+      self.kernel_gini_matrix=self.prg_gini_matrix.gini
+      self.kernel_dict[matrix.shape]=self.kernel_gini_matrix
+      
     #getting data to the device
     mf=cl.mem_flags
     d_a_buf=cl.Buffer(self.ctx, mf.READ_ONLY|mf.COPY_HOST_PTR, hostbuf=matrix)

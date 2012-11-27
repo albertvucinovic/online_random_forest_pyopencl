@@ -1,4 +1,4 @@
-from decision_tree_node import DecisionTreeNode
+from decision_tree import DecisionTreeNode
 
 class ClassificationTree(DecisionTreeNode):
   def __init__(self, 

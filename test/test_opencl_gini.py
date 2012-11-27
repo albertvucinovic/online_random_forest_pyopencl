@@ -15,7 +15,7 @@ classes=numpy.array(map(lambda x:numpy.random.randint(5), range(height))).astype
 
 class TestOpenCLGini(unittest.TestCase):
   def setUp(self):
-    self.opencl_calc=OpenCLGiniCalculator(height, width)
+    self.opencl_calc=OpenCLGiniCalculator()
     self.classes=classes
 
 
