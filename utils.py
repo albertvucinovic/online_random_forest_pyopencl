@@ -11,7 +11,10 @@ def argmax(d):
         max_count=value
         max_class=key
     #returning the chosen class and the confidence
-    return (max_class, max_count/float(total_count))
+    if total_count==0:
+      return (max_class, 0.)
+    else:
+      return (max_class, max_count/float(total_count))
 
 #returns the element that shows up maximum number of times
 def predict_max(a):
