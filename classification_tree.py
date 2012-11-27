@@ -1,4 +1,5 @@
 from decision_tree import DecisionTreeNode
+from utils import *
 
 class ClassificationTree(DecisionTreeNode):
   def __init__(self, 
@@ -14,6 +15,7 @@ class ClassificationTree(DecisionTreeNode):
     self.number_of_decision_functions=number_of_decision_functions
     self.min_samples_to_split=min_samples_to_split
     self.predict_without_samples=predict_without_samples
+    self.max_samples_to_save=100
     #Dynamic
     self.left=None #False branch
     self.right=None #True branch

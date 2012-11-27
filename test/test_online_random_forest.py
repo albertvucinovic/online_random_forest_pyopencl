@@ -89,7 +89,7 @@ class TestOnlineRandomForest(unittest.TestCase):
 
 
   def test_online_random_forest_classifier(self):
-    rf=orf.OnlineRandomForestClassifier(
+    rf=orf.OnlineRandomForestClassifierOpenCLSplit(
       number_of_features=181,
       number_of_samples_to_split=10,
       number_of_decision_functions_at_node=180,
@@ -113,7 +113,7 @@ class TestOnlineRandomForest(unittest.TestCase):
     (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.t')
     self.predict_libsvm_set_classification(rf, x, y)
     
-  def test_online_random_forest_regressor(self):
+  def _test_online_random_forest_regressor(self):
     rf=orf.OnlineRandomForestRegressor(
       number_of_features=181,
       number_of_samples_to_split=10,

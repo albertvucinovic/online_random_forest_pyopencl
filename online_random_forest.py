@@ -8,6 +8,7 @@ from multiprocessing.pool import ThreadPool as Pool
 from utils import *
 from decision_tree import DecisionTree
 from classification_tree import ClassificationTree
+from classification_tree_opencl import ClassificationTreeOpenCL
 
 
 class OnlineRandomForestRegressor:
@@ -75,11 +76,12 @@ class OnlineRandomForestClassifier(OnlineRandomForestRegressor):
     number_of_trees=100,
     number_of_decision_functions_at_node=10,
     number_of_samples_to_split=2,
+    tree_class=ClassificationTree
   ):
     self.number_of_features=number_of_features
     self.number_of_trees=number_of_trees
     self.number_of_decision_functions_at_node=number_of_decision_functions_at_node
-    self.trees=map(lambda x:ClassificationTree(
+    self.trees=map(lambda x:tree_class(
       number_of_features,
       number_of_decision_functions_at_node,
       min_samples_to_split=number_of_samples_to_split),
@@ -89,5 +91,20 @@ class OnlineRandomForestClassifier(OnlineRandomForestRegressor):
   def predict(self, x):
     predictions=[tree.predict(x) for tree in self.trees]
     return predict_max(predictions)
+
+class OnlineRandomForestClassifierOpenCLSplit(OnlineRandomForestClassifier):
+  def __init__(self,
+    number_of_features,
+    number_of_trees=100,
+    number_of_decision_functions_at_node=10,
+    number_of_samples_to_split=2,
+  ):
+    OnlineRandomForestClassifier.__init__(
+      self,
+      number_of_features,
+      number_of_trees,
+      number_of_decision_functions_at_node,
+      number_of_samples_to_split,
+      tree_class=ClassificationTreeOpenCL)
 
 
