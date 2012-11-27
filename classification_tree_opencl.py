@@ -3,6 +3,8 @@ from classification_tree import ClassificationTree
 from gini_opencl import OpenCLGiniCalculator
 
 import numpy
+
+#this needs to be here, because the ClassificationTree uses it.
 from utils import *
 
 class ClassificationTreeOpenCL(ClassificationTree):
