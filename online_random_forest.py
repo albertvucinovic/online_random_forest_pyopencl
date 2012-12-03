@@ -9,6 +9,7 @@ from utils import *
 from decision_tree import DecisionTree
 from classification_tree import ClassificationTree
 from classification_tree_opencl import ClassificationTreeOpenCL
+from regression_tree_secret_opencl import RegressionTreeSecretOpenCL
 
 
 class OnlineRandomForestRegressor:
@@ -22,11 +23,12 @@ class OnlineRandomForestRegressor:
       number_of_trees=100, 
       number_of_decision_functions_at_node=10, 
       number_of_samples_to_split=10,
-      tolerance=1e-5):
+      tolerance=1e-5,
+      tree_class=DecisionTree):
     self.number_of_trees=number_of_trees
     self.number_of_decision_functions_at_node=number_of_decision_functions_at_node
     self.tolerance=tolerance
-    self.trees=map(lambda x:DecisionTree(
+    self.trees=map(lambda x:tree_class(
       number_of_features,
       number_of_decision_functions_at_node,
       min_samples_to_split=number_of_samples_to_split,
@@ -106,5 +108,24 @@ class OnlineRandomForestClassifierOpenCLSplit(OnlineRandomForestClassifier):
       number_of_decision_functions_at_node,
       number_of_samples_to_split,
       tree_class=ClassificationTreeOpenCL)
+
+
+
+class OnlineRandomForestRegressorSecretOpenCL(OnlineRandomForestRegressor):
+  def __init__(self,
+    number_of_features,
+    number_of_trees=100,
+    number_of_decision_functions_at_node=10,
+    number_of_samples_to_split=2,
+  ):
+    OnlineRandomForestRegressor.__init__(
+      self,
+      number_of_features,
+      number_of_trees,
+      number_of_decision_functions_at_node,
+      number_of_samples_to_split,
+      tree_class=RegressionTreeSecretOpenCL)
+
+ 
 
 

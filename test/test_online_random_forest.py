@@ -89,7 +89,7 @@ class TestOnlineRandomForest(unittest.TestCase):
     print correct/float(total)
 
 
-  def test_online_random_forest_classifier(self):
+  def _test_online_random_forest_classifier(self):
     rf=orf.OnlineRandomForestClassifierOpenCLSplit(
       number_of_features=181,
       number_of_samples_to_split=10,
@@ -142,8 +142,8 @@ class TestOnlineRandomForest(unittest.TestCase):
     print "Speedup is:" ,noopencltime/opencltime
 
     
-  def _test_online_random_forest_regressor(self):
-    rf=orf.OnlineRandomForestRegressor(
+  def test_online_random_forest_regressor(self):
+    rf=orf.OnlineRandomForestRegressorSecretOpenCL(
       number_of_features=181,
       number_of_samples_to_split=10,
       number_of_decision_functions_at_node=180,
@@ -151,6 +151,7 @@ class TestOnlineRandomForest(unittest.TestCase):
       )
     (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.tr')
     
+    t=time()
     for k in range(1):
       for i,row in enumerate(x):
           #if i<10:
@@ -160,12 +161,42 @@ class TestOnlineRandomForest(unittest.TestCase):
             row_as_np_array[key]=value
           print "                                                                         Update", k, i
           rf.update(row_as_np_array, y[i])
+    opencltime=time()-t
 
-    print "Predicting training ..."
+    print "Predicting training opencl ..."
     self.predict_libsvm_set_regression(rf, x, y)
-    print "Predicting test ..."
+    print "Predicting test opencl ..."
     (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.t')
     self.predict_libsvm_set_regression(rf, x, y)
+
+    rf=orf.OnlineRandomForestRegressor(
+      number_of_features=181,
+      number_of_samples_to_split=10,
+      number_of_decision_functions_at_node=180,
+      number_of_trees=20
+      )
+    (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.tr')
+    
+    t=time()
+    for k in range(1):
+      for i,row in enumerate(x):
+          #if i<10:
+          row_as_np_array=self.row_as_numpy_array(row)
+          row_as_np_array=numpy.zeros(181)
+          for key,value in row.iteritems():
+            row_as_np_array[key]=value
+          print "                                                                         Update", k, i
+          rf.update(row_as_np_array, y[i])
+    noopencltime=time()-t
+
+    print "Predicting training no opencl..."
+    self.predict_libsvm_set_regression(rf, x, y)
+    print "Predicting test no opencl ..."
+    (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.t')
+    self.predict_libsvm_set_regression(rf, x, y)
+
+    print "Speedup is:", noopencltime/opencltime 
+
 
 
   def test_online_random_forest(self):
