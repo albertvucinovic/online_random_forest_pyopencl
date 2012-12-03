@@ -15,7 +15,7 @@ class RegressionTreeSecretOpenCL(DecisionTree):
     print "OpenCL Regression split"
     #X=[0.9,1.,1.9,2.,2.1,1.1]
     X=[prediction for (feature_value,prediction) in enumerate(self._first_feature())]
-    gmm=GMM(n_components=2, covariance_type='spherical', init_params='wc', n_iter=20)
+    gmm=GMM(n_components=2, covariance_type='spherical', init_params='wc', n_iter=10)
     gmm.fit(X)
     classes=numpy.array(gmm.predict(X)).astype(numpy.float32)
     
