@@ -139,7 +139,7 @@ class TestOnlineRandomForest(unittest.TestCase):
     print "Predicting test ..."
     (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.t')
     self.predict_libsvm_set_classification(rf, x, y)
-    print "Speedup is:" ,noopencltime/opencltime
+    print "OpenCL Classification Speedup is:" ,noopencltime/opencltime
 
     
   def test_online_random_forest_regressor(self):
@@ -195,7 +195,7 @@ class TestOnlineRandomForest(unittest.TestCase):
     (y,x)=libsvm.svm_read_problem('data/libsvm/dna.scale.t')
     self.predict_libsvm_set_regression(rf, x, y)
 
-    print "Speedup is:", noopencltime/opencltime 
+    print "OpenCL Secret Regression Speedup is:", noopencltime/opencltime 
 
 
 
