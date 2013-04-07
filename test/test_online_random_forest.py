@@ -1,5 +1,5 @@
-import online_random_forest.online_random_forest as orf
-import online_random_forest.libsvm_format as libsvm
+import online_random_forest as orf
+import libsvm_format as libsvm
 import unittest
 from sklearn.mixture import GMM
 import numpy

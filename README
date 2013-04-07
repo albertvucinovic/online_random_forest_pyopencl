@@ -1,0 +1,2 @@
+To run tests, run the following from the root directory(directory in which the test directory resides):
+  python2 -m test.test_online_random_forest
